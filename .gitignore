@@ -90,5 +90,5 @@ typings/
 .dynamodb/
 
 # Personal additions
-to-do.txt
+build
 package-lock.json

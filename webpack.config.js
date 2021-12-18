@@ -1,48 +1,60 @@
-const webpack = require("webpack");
-const path = require("path");
+const path = require('path')
+const CopyWebpackPlugin = require('copy-webpack-plugin')
+const TsconfigPathsPlugin = require('tsconfig-paths-webpack-plugin')
 
-// http://webpack.github.io/docs/configuration.html
-module.exports = {
-	entry:{
-		main: "./src/App.ts",
-	},
+module.exports = (_, { mode = 'development' }) => {
+  return {
+    mode,
+    entry: {
+      main: './src/main.ts',
+    },
 
-	// Outputs compiled bundle to `./web/js/main.js`
-	output:{
-		path: __dirname + "/web/",
-		filename: "js/[name].js"
-	},
+    output: {
+      path: __dirname + '/build/',
+      filename: 'js/main.js',
+    },
 
-	resolve: {
-		extensions: [".webpack.js", ".web.js", ".ts", ".tsx", ".js"],
+    resolve: {
+      extensions: ['.webpack.js', '.web.js', '.ts', '.tsx', '.js'],
+      plugins: [new TsconfigPathsPlugin()],
+    },
 
-		// Shortcuts to avoid up-one-level hell: 
-		// Turns "../../../utils" into "Utils"
-		alias: {
-			Utils: path.resolve(__dirname, "./src/utils/"),
-		},
-	},
+    plugins: [
+      new CopyWebpackPlugin({
+        patterns: [{ from: 'public' }],
+      }),
+    ],
 
-	module:{
-		// Test file extension to run loader
-		rules: [
-			{
-				test: /\.(glsl|vs|fs)$/, 
-				loader: "ts-shader-loader"
-			},
-			{
-				test: /\.tsx?$/, 
-				exclude: [/node_modules/, /tsOld/],
-				loader: "ts-loader"
-			}
-		]
-	},
+    module: {
+      rules: [
+        {
+          test: /\.(glsl|vert|tesc|tese|geom|frag|comp)$/,
+          loader: 'ts-shader-loader',
+        },
+        {
+          test: /\.tsx?$/,
+          loader: 'ts-loader',
+          options: {
+            transpileOnly: mode === 'development',
+          },
+        },
+      ],
+    },
 
-	// Enables dev server to be accessed by computers in local network
-	devServer: {
-		host: "0.0.0.0",
-		port: 8000,
-		publicPath: "/web/",
-		disableHostCheck: true
-	}
+    devServer: {
+      static: {
+        directory: path.join(__dirname, 'public'),
+      },
+      client: {
+        logging: 'info',
+        overlay: true,
+        progress: true,
+        reconnect: true,
+      },
+      open: true,
+      bonjour: true,
+      compress: true,
+      port: 3000,
+    },
+  }
 }
